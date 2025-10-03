@@ -1,160 +1,149 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flowplayer / Vertical 9:16 (Optimized)</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Responsive Vertical/Horizontal Player</title>
 
-    <!-- Flowplayer core -->
-    <link rel="stylesheet" href="https://cdn.flowplayer.com/releases/native/3/stable/style/flowplayer.css" />
-    <script src="https://cdn.flowplayer.com/releases/native/3/stable/flowplayer.min.js"></script>
-    <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/hls.min.js"></script>
-    <!-- Quality selection plugin -->
-    <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/qsel.min.js"></script>
+  <!-- Flowplayer Native + HLS plugin -->
+  <link rel="stylesheet" href="https://cdn.flowplayer.com/releases/native/3/stable/style/flowplayer.css" />
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/flowplayer.min.js" defer></script>
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/hls.min.js" defer></script>
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/qsel.min.js"></script>
 
-    <script>
-      // Reuse existing values from your original page
-      const primarySrc = "https://cdn3.wowza.com/1/MzRHWlBka0Zxa2h1/SjR1K3oy/hls/live/playlist.m3u8";
-      const token = "eyJraWQiOiIwWE44RnRTYkQxblYiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwiMFhOOEZ0U2JEMW5WXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.wHlyQZ86rIHD8ldgnpiWbmFBmR4zt_3FSj78GMk7lfQ1es7K8y0MuHzbqcJfp0lm6LcUbUkQ5PsazIsAybxivg";
-    </script>
-
-    <style>
-      :root {
-        --focus-x: 50%;
-      }
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: #0b0c0d;
-        color: #eaeaea;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      }
-      .viewport {
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 12px;
-        gap: 12px;
-      }
-      #player {
-        background: #000;
-        aspect-ratio: 9 / 16;
-        height: min(100vh - 120px, 1920px);
-        max-height: 1920px;
-        max-width: 1080px;
-        width: auto;
-        margin: 0 auto;
-        border-radius: 12px;
-        overflow: hidden;
-        position: relative;
-      }
-      /* Fill vertically (client-side crop when source is 16:9) */
-      #player video {
-        object-fit: cover !important;
-        object-position: var(--focus-x) 50% !important;
-        background: #000;
-      }
-      .controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: #111518;
-        padding: 10px 12px;
-        border-radius: 10px;
-        max-width: 1080px;
-        margin: 0 auto;
-        font-size: 14px;
-      }
-      .controls label { opacity: .85; }
-      .chip {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #1e2329;
-        font-variant-numeric: tabular-nums;
-      }
-      .debug {
-        position: absolute;
-        left: 8px;
-        bottom: 8px;
-        background: rgba(0,0,0,.55);
-        padding: 6px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        line-height: 1.2;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="viewport">
-      <div id="player"></div>
-
-      <div class="controls">
-        <span>Focus:</span>
-        <label for="focusX">Left</label>
-        <input id="focusX" type="range" min="0" max="100" value="50" />
-        <label for="focusX">Right</label>
-        <span class="chip" id="chipOrient">—</span>
-        <span class="chip" id="chipRes">—</span>
-      </div>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; padding: 0; background: #000; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .stage.flowplayer {
+      position: relative; width: 100%;
+      aspect-ratio: 16 / 9;            /* Desktop/laptop default */
+      background:#000; border-radius:16px; overflow:hidden;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    /* Phones / portrait → 9:16 container */
+    @media (max-width: 768px), (orientation: portrait) {
+      .stage.flowplayer { aspect-ratio: 9 / 16; }
+    }
+    /* Fit rules: contain for 16:9 desktop, cover for 9:16 mobile */
+    .stage.flowplayer video { width:100%; height:100%; object-fit: contain; object-position: 50% 50%; }
+    @media (max-width: 768px), (orientation: portrait) {
+      .stage.flowplayer video { object-fit: cover; }
+    }
+    /* Unmute button for mobile */
+    #unmuteBtn {
+      position:absolute; right:12px; bottom:12px; z-index:40;
+      padding:8px 10px; border:0; border-radius:10px;
+      font-weight:700; background:#1e90ff; color:#fff; cursor:pointer;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div id="player" class="flowplayer stage">
+      <button id="unmuteBtn">🔊 Unmute</button>
     </div>
+  </main>
 
-    <script>
-      function updateOrientationChip() {
-        const chip = document.getElementById('chipOrient');
-        chip.textContent = window.matchMedia("(orientation: portrait)").matches ? "Portrait" : "Landscape";
-      }
+  <script defer>
+    window.addEventListener("DOMContentLoaded", () => {
+      if (!window.flowplayer) { console.error("Flowplayer not loaded"); return; }
+
+      // Works from ANY device on your LAN (Mac, iPhone, etc.)
+      const HLS_URL = `${location.origin}/vv/hls/live/playlist.m3u8`;
+
+      // Your Flowplayer token (required on non-localhost origins)
+      const token =
+        "eyJraWQiOiIwWE44RnRTYkQxblYiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwiMFhOOEZ0U2JEMW5WXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.wHlyQZ86rIHD8ldgnpiWbmFBmR4zt_3FSj78GMk7lfQ1es7K8y0MuHzbqcJfp0lm6LcUbUkQ5PsazIsAybxivg";
+
       const player = flowplayer("#player", {
         token,
-        src: { type: "application/x-mpegurl", src: primarySrc }
-        // muted: true, autoplay: true
+        src: HLS_URL,
+        autoplay: true,
+        muted: true,              // required for mobile autoplay
+        live: true,
+        hls: {
+          debug: false,
+          lowLatencyMode: true,
+          xhrSetup: (xhr) => { xhr.withCredentials = false; } // no cookies → fewer CORS surprises
+        },
+        keyboard: false,
+        mutedAutoplay: "try"
       });
-      const debug = document.createElement('div');
-      debug.className = 'debug';
-      debug.id = 'dbg';
-      debug.textContent = 'loading…';
-      document.querySelector('#player').appendChild(debug);
-      function updateDebug() {
-        const v = document.querySelector('#player video');
-        if (!v) return;
-        const w = v.videoWidth || 0;
-        const h = v.videoHeight || 0;
-        const por = window.matchMedia("(orientation: portrait)").matches ? "P" : "L";
-        document.getElementById('chipRes').textContent = w && h ? `${w}×${h}` : '—';
-        debug.textContent = `intrinsic: ${w}×${h} | orient: ${por}`;
+
+      // Make the underlying <video> inline + CORS-friendly, show Unmute on mobile
+      player.on("ready", () => {
+        const v = player.container.querySelector("video");
+        if (v) {
+          v.setAttribute("playsinline", "");
+          v.setAttribute("crossorigin", "anonymous");
+        }
+        const btn = document.getElementById("unmuteBtn");
+        if (btn && v) {
+          btn.style.display = "block";
+          btn.onclick = async () => { v.muted = false; try { await v.play(); } catch {} btn.style.display = "none"; };
+        }
+      });
+
+      // Prefer orientation-appropriate levels (landscape on desktop, portrait on phones)
+      function wantPortraitViewport() {
+        return window.matchMedia("(max-width: 768px), (orientation: portrait)").matches;
       }
-      function preferPortraitLevel() {
-        try {
-          const eng = player.engine;
-          const hls = eng && eng.hls;
-          if (!hls || !Array.isArray(hls.levels)) return;
-          const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-          if (!isPortrait) return;
-          const portraitLevels = hls.levels
-            .map((l, i) => ({i, w: l.width, h: l.height, bitrate: l.bitrate}))
-            .filter(l => l.h > l.w);
-          if (portraitLevels.length) {
-            const best = portraitLevels.sort((a,b) => b.h - a.h)[0];
-            hls.startLevel = best.i;
-            hls.currentLevel = best.i;
+
+      player.on("hlsManifestParsed", () => {
+        const hls = player.engine && player.engine.hls;
+        if (!hls || !Array.isArray(hls.levels)) return; // Safari may be native, no hls.js instance
+
+        const levels = hls.levels;
+        const portrait = [], landscape = [];
+        levels.forEach((l, i) => {
+          const isPortrait = (l.height && l.width) ? (l.height > l.width)
+            : (l.attrs && l.attrs.RESOLUTION && /x\s*1920\b/i.test(String(l.attrs.RESOLUTION)));
+          (isPortrait ? portrait : landscape).push(i);
+        });
+
+        const chooseBest = (set) => {
+          if (!set.length) return -1;
+          return set.reduce((best, i) => {
+            const a = levels[best] || {width:0, height:0};
+            const b = levels[i];
+            const ap = (a.width||0) * (a.height||0);
+            const bp = (b.width||0) * (b.height||0);
+            return bp > ap ? i : best;
+          }, set[0]);
+        };
+
+        const pickForViewport = () => {
+          const allowed = wantPortraitViewport() ? portrait : landscape;
+          const target = chooseBest(allowed);
+          if (target >= 0) {
+            if ("startLevel" in hls && hls.startLevel === -1) hls.startLevel = target;
+            hls.nextLevel = target;
           }
-        } catch(e) { console.warn('portrait level select error', e); }
-      }
-      player.on('ready', () => {
-        updateOrientationChip();
-        preferPortraitLevel();
-        setTimeout(updateDebug, 100);
+        };
+
+        pickForViewport();
+
+        // If hls.js is present, gently keep within the chosen orientation set
+        if (typeof hls.on === "function") {
+          const allowedSetPortrait = new Set(portrait);
+          const allowedSetLandscape = new Set(landscape);
+          hls.on(Hls.Events.LEVEL_SWITCHING, (_e, data) => {
+            const allow = wantPortraitViewport() ? allowedSetPortrait : allowedSetLandscape;
+            if (!allow.has(data.level)) {
+              const fallback = chooseBest(Array.from(allow));
+              if (fallback >= 0) hls.nextLevel = fallback;
+            }
+          });
+        }
+
+        // React to viewport changes
+        const reselect = () => pickForViewport();
+        window.addEventListener("resize", reselect, { passive: true });
+        window.addEventListener("orientationchange", reselect, { passive: true });
       });
-      player.on('playing', updateDebug);
-      window.addEventListener('resize', () => {
-        updateOrientationChip(); updateDebug(); preferPortraitLevel();
-      });
-      window.addEventListener('orientationchange', () => {
-        updateOrientationChip(); preferPortraitLevel();
-      });
-      document.getElementById('focusX').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty('--focus-x', e.target.value + '%');
-      });
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
