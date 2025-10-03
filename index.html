@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Responsive Vertical/Horizontal Player</title>
+  <title>Responsive Vertical/Horizontal Player (iOS-safe)</title>
 
   <!-- Flowplayer Native + HLS plugin -->
   <link rel="stylesheet" href="https://cdn.flowplayer.com/releases/native/3/stable/style/flowplayer.css" />
@@ -20,6 +20,7 @@
       aspect-ratio: 16 / 9;            /* Desktop/laptop default */
       background:#000; border-radius:16px; overflow:hidden;
       box-shadow:0 10px 30px rgba(0,0,0,.35);
+      transition: border-radius .2s ease;
     }
     /* Phones / portrait → 9:16 container */
     @media (max-width: 768px), (orientation: portrait) {
@@ -30,6 +31,27 @@
     @media (max-width: 768px), (orientation: portrait) {
       .stage.flowplayer video { object-fit: cover; }
     }
+
+    /* Immersive (soft fullscreen) mode */
+    .stage.flowplayer.is-immersive {
+      position: fixed; inset: 0; z-index: 9999;
+      border-radius: 0;
+      max-width: none; width: 100vw; height: 100vh;
+      aspect-ratio: auto; /* let video fill viewport via object-fit */
+    }
+    .controls-bar {
+      display:flex; gap:8px; align-items:center; justify-content:flex-end;
+      margin-top:8px;
+    }
+    .btn {
+      background:#1e90ff; color:#fff; border:0; border-radius:10px;
+      padding:8px 12px; font-weight:700; cursor:pointer;
+    }
+
+    /* Hide (most) native fullscreen affordances */
+    .flowplayer .fp-controls .fp-fullscreen { display:none !important; }
+    video::-webkit-media-controls-fullscreen-button { display:none !important; }
+
     /* Unmute button for mobile */
     #unmuteBtn {
       position:absolute; right:12px; bottom:12px; z-index:40;
@@ -44,22 +66,35 @@
     <div id="player" class="flowplayer stage">
       <button id="unmuteBtn">🔊 Unmute</button>
     </div>
+    <div class="controls-bar">
+      <button id="toggleImmersive" class="btn">Immersive</button>
+    </div>
   </main>
 
-  <script defer>
+  <script>
     window.addEventListener("DOMContentLoaded", () => {
       if (!window.flowplayer) { console.error("Flowplayer not loaded"); return; }
 
-      // Works from ANY device on your LAN (Mac, iPhone, etc.)
-      const HLS_URL = "https://cdn3.wowza.com/1/MzRHWlBka0Zxa2h1/SjR1K3oy/hls/live/playlist.m3u8";
+      // 👉 Update the URLs below to your live endpoints.
+      const LANDSCAPE_URL = "https://cdn3.wowza.com/1/MzRHWlBka0Zxa2h1/SjR1K3oy/hls/live/playlist.m3u8";
+      // If you have a PORTRAIT-only master, set it here (recommended on iOS for reliable portrait):
+      const PORTRAIT_URL  = LANDSCAPE_URL; // set to portrait master when available
 
-      // Your Flowplayer token (required on non-localhost origins)
-      const token =
-        "eyJraWQiOiIwWE44RnRTYkQxblYiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwiMFhOOEZ0U2JEMW5WXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.wHlyQZ86rIHD8ldgnpiWbmFBmR4zt_3FSj78GMk7lfQ1es7K8y0MuHzbqcJfp0lm6LcUbUkQ5PsazIsAybxivg";
+      // Your Flowplayer token
+      const token = "eyJraWQiOiIwWE44RnRTYkQxblYiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwiMFhOOEZ0U2JEMW5WXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.wHlyQZ86rIHD8ldgnpiWbmFBmR4zt_3FSj78GMk7lfQ1es7K8y0MuHzbqcJfp0lm6LcUbUkQ5PsazIsAybxivg";
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+      const wantPortraitViewport = () =>
+        window.matchMedia("(max-width: 768px), (orientation: portrait)").matches;
+
+      // Choose initial URL based on viewport for iOS, since Safari uses native HLS.
+      const initialURL = (isIOS && wantPortraitViewport() && PORTRAIT_URL) ? PORTRAIT_URL : LANDSCAPE_URL;
 
       const player = flowplayer("#player", {
         token,
-        src: HLS_URL,
+        src: initialURL,
         autoplay: true,
         muted: true,              // required for mobile autoplay
         live: true,
@@ -72,12 +107,26 @@
         mutedAutoplay: "try"
       });
 
-      // Make the underlying <video> inline + CORS-friendly, show Unmute on mobile
+      const stage = document.querySelector("#player");
+
+      // Make the underlying <video> inline + CORS-friendly, hide native fullscreen
       player.on("ready", () => {
         const v = player.container.querySelector("video");
         if (v) {
           v.setAttribute("playsinline", "");
+          v.setAttribute("webkit-playsinline", "");
+          v.setAttribute("x5-playsinline", ""); // some WebViews
           v.setAttribute("crossorigin", "anonymous");
+          // hint to hide fullscreen where supported
+          v.setAttribute("controlsList", "nofullscreen");
+          // iOS emits these when native fullscreen begins/ends (can't fully prevent)
+          v.addEventListener("webkitbeginfullscreen", () => {
+            console.log("Entered iOS native fullscreen");
+          });
+          v.addEventListener("webkitendfullscreen", () => {
+            console.log("Exited iOS native fullscreen");
+            // Re-apply cropping layout; player stays inline automatically due to playsinline
+          });
         }
         const btn = document.getElementById("unmuteBtn");
         if (btn && v) {
@@ -86,63 +135,31 @@
         }
       });
 
-      // Prefer orientation-appropriate levels (landscape on desktop, portrait on phones)
-      function wantPortraitViewport() {
-        return window.matchMedia("(max-width: 768px), (orientation: portrait)").matches;
-      }
-
-      player.on("hlsManifestParsed", () => {
-        const hls = player.engine && player.engine.hls;
-        if (!hls || !Array.isArray(hls.levels)) return; // Safari may be native, no hls.js instance
-
-        const levels = hls.levels;
-        const portrait = [], landscape = [];
-        levels.forEach((l, i) => {
-          const isPortrait = (l.height && l.width) ? (l.height > l.width)
-            : (l.attrs && l.attrs.RESOLUTION && /x\s*1920\b/i.test(String(l.attrs.RESOLUTION)));
-          (isPortrait ? portrait : landscape).push(i);
-        });
-
-        const chooseBest = (set) => {
-          if (!set.length) return -1;
-          return set.reduce((best, i) => {
-            const a = levels[best] || {width:0, height:0};
-            const b = levels[i];
-            const ap = (a.width||0) * (a.height||0);
-            const bp = (b.width||0) * (b.height||0);
-            return bp > ap ? i : best;
-          }, set[0]);
-        };
-
-        const pickForViewport = () => {
-          const allowed = wantPortraitViewport() ? portrait : landscape;
-          const target = chooseBest(allowed);
-          if (target >= 0) {
-            if ("startLevel" in hls && hls.startLevel === -1) hls.startLevel = target;
-            hls.nextLevel = target;
-          }
-        };
-
-        pickForViewport();
-
-        // If hls.js is present, gently keep within the chosen orientation set
-        if (typeof hls.on === "function") {
-          const allowedSetPortrait = new Set(portrait);
-          const allowedSetLandscape = new Set(landscape);
-          hls.on(Hls.Events.LEVEL_SWITCHING, (_e, data) => {
-            const allow = wantPortraitViewport() ? allowedSetPortrait : allowedSetLandscape;
-            if (!allow.has(data.level)) {
-              const fallback = chooseBest(Array.from(allow));
-              if (fallback >= 0) hls.nextLevel = fallback;
-            }
-          });
+      // Custom "Immersive" (soft fullscreen) mode that preserves CSS cropping
+      const toggleImmersive = () => {
+        stage.classList.toggle("is-immersive");
+        // Scroll lock for iOS
+        if (stage.classList.contains("is-immersive")) {
+          document.documentElement.style.overflow = "hidden";
+          document.body.style.overflow = "hidden";
+        } else {
+          document.documentElement.style.overflow = "";
+          document.body.style.overflow = "";
         }
+      };
+      document.getElementById("toggleImmersive").addEventListener("click", toggleImmersive);
 
-        // React to viewport changes
-        const reselect = () => pickForViewport();
-        window.addEventListener("resize", reselect, { passive: true });
-        window.addEventListener("orientationchange", reselect, { passive: true });
-      });
+      // On iOS/Safari, swap between portrait/landscape masters when orientation changes
+      const swapForOrientation = () => {
+        if (!(isIOS || isSafari)) return; // hls.js on Chrome/Firefox can stay on one master
+        const wantPortrait = wantPortraitViewport();
+        const targetURL = wantPortrait ? (PORTRAIT_URL || LANDSCAPE_URL) : LANDSCAPE_URL;
+        // Flowplayer Native v3 supports player.load({ src })
+        player.load({ src: targetURL });
+      };
+
+      window.addEventListener("orientationchange", swapForOrientation);
+      window.addEventListener("resize", swapForOrientation);
     });
   </script>
 </body>
