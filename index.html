@@ -8,39 +8,23 @@
   <link rel="stylesheet" href="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.css" />
 
   <!-- Flowplayer JS -->
-  <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
-  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
-  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/flowplayer.min.js"></script>
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/drm.min.js"></script>
+  <script src="https://cdn.flowplayer.com/releases/native/3/stable/plugins/dash.min.js"></script>
 
   <style>
-  body {
-    margin: 0;
-    background: #FFF;
-  }
-
-  /* Wrap just to center horizontally, not vertically */
-  #player-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 40px; /* padding instead of vh */
-  }
-
-  #player {
-    width: 80%;
-    max-width: 900px;
-    background: #000;
-  }
-</style>
-
+    #player {
+      width: 80%;
+      max-width: 900px;
+      margin: 40px auto;
+      background: #000;
+    }
+  </style>
 </head>
 
 <body>
-
-<div id="player-wrapper">
-  <div id="player"></div>
+<div id="player"></div>
 </div>
-
 <script>
 window.addEventListener("DOMContentLoaded", () => {
 
