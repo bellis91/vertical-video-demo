@@ -7,19 +7,18 @@
   <!-- Flowplayer Native Core -->
   <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
 
-  <!-- Plugins -->
+  <!-- Load DRM plugin BEFORE DASH plugin -->
   <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
   <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
-  
 
   <style>
     body { 
         margin: 0; 
         background: #FFF; 
         display: flex;
-        justify-content: center;   /* horizontal center */
-        align-items: center;        /* vertical center */
-        height: 100vh;              /* full window height */
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
     }
 
     #player {
@@ -36,26 +35,42 @@
 <script>
 window.addEventListener("load", () => {
 
-  // Your Flowplayer player token
-  const playerToken = "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
+  const playerToken =
+    "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
+
+  // Base stream root for rewriting relative URLs
+  const ABSOLUTE_BASE =
+    "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/";
 
   const player = flowplayer("#player", {
-    token: playerToken,        // <-- IMPORTANT
-
+    token: playerToken,
     autoplay: false,
     controls: true,
 
-    src: {
+    // IMPORTANT: Use "sources" (array), not "src" object
+    sources: [{
       type: "application/dash+xml",
-      src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd"
-    },
+      src: ABSOLUTE_BASE + "manifest.mpd"
+    }],
 
+    // EZDRM configuration
     drm: {
       "com.widevine.alpha": {
         url: "https://widevine-dash.ezdrm.com/proxy?pX=E305BB"
       },
       "com.microsoft.playready": {
         url: "https://playready.ezdrm.com/cency/preauth.aspx?pX=647252"
+      }
+    },
+
+    // ⭐ DASH Rewrite Hook: Fix relative segment paths
+    dash: {
+      rewriteUrl: (url, context) => {
+        // If URL is already absolute, leave it
+        if (url.startsWith("http")) return url;
+
+        // Convert ../foo/bar.m4s → correct CDN3 absolute path
+        return ABSOLUTE_BASE + url.replace(/^(\.\.\/)+/, "");
       }
     }
   });
@@ -65,3 +80,4 @@ window.addEventListener("load", () => {
 
 </body>
 </html>
+
