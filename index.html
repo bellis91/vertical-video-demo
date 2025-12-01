@@ -2,36 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flowplayer + EZDRM + DASH (Wowza Video)</title>
+  <title>Flowplayer + EZDRM + DASH</title>
 
-  <!-- Flowplayer Native Core -->
+  <!-- REQUIRED Flowplayer CSS -->
+  <link rel="stylesheet" href="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.css" />
+
+  <!-- Flowplayer JS -->
   <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
-
-  <!-- Plugins -->
   <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
   <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
-  
 
   <style>
-    body { 
-        margin: 0; 
-        background: #FFF; 
-        display: flex;
-        justify-content: center;   /* horizontal center */
-        align-items: center;        /* vertical center */
-        height: 100vh;              /* full window height */
+    body {
+      margin: 0;
+      background: #FFF;
+    }
+
+    #player-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     #player {
-        width: 80%;
-        height: 80vh;
-        background: #000;
+      width: 80%;
+      max-width: 900px;
+      background: #000;
     }
   </style>
 </head>
+
 <body>
 
-<div id="player"></div>
+<div id="player-wrapper">
+  <div id="player"></div>
+</div>
 
 <script>
 window.addEventListener("DOMContentLoaded", () => {
