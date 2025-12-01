@@ -1,3 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flowplayer + EZDRM + DASH (Wowza Video)</title>
+
+  <!-- Flowplayer Native Core -->
+  <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
+
+  <!-- Plugins -->
+  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
+  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
+  
+
+  <style>
+    body { 
+        margin: 0; 
+        background: #FFF; 
+        display: flex;
+        justify-content: center;   /* horizontal center */
+        align-items: center;        /* vertical center */
+        height: 100vh;              /* full window height */
+    }
+
+    #player {
+        width: 80%;
+        height: 80vh;
+        background: #000;
+    }
+  </style>
+</head>
+<body>
+
+<div id="player"></div>
+
 <script>
 window.addEventListener("load", () => {
 
@@ -45,3 +80,5 @@ window.addEventListener("load", () => {
 
 });
 </script>
+</body> 
+</html>
