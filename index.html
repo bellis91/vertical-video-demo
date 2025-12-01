@@ -38,7 +38,6 @@ window.addEventListener("load", () => {
   const playerToken =
     "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
 
-  // Base stream root for rewriting relative URLs
   const ABSOLUTE_BASE =
     "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/";
 
@@ -47,13 +46,11 @@ window.addEventListener("load", () => {
     autoplay: false,
     controls: true,
 
-    // IMPORTANT: Use "sources" (array), not "src" object
     sources: [{
       type: "application/dash+xml",
       src: ABSOLUTE_BASE + "manifest.mpd"
     }],
 
-    // EZDRM configuration
     drm: {
       "com.widevine.alpha": {
         url: "https://widevine-dash.ezdrm.com/proxy?pX=E305BB"
@@ -63,21 +60,23 @@ window.addEventListener("load", () => {
       }
     },
 
-    // ⭐ DASH Rewrite Hook: Fix relative segment paths
     dash: {
       rewriteUrl: (url, context) => {
-        // If URL is already absolute, leave it
+
+        // If absolute, return as is
         if (url.startsWith("http")) return url;
 
-        // Convert ../foo/bar.m4s → correct CDN3 absolute path
-        return ABSOLUTE_BASE + url.replace(/^(\.\.\/)+/, "");
+        // Strip any relative prefixes
+        const clean = url.replace(/^(\.?\.\/)+/, "");
+
+        // Force absolute CDN3 path
+        return ABSOLUTE_BASE + clean;
       }
     }
   });
 
 });
 </script>
-
 </body>
 </html>
 
