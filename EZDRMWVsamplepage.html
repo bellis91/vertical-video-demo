@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flowplayer + EZDRM + DASH (Wowza Video)</title>
+
+  <!-- Flowplayer Native Core -->
+  <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
+
+  <!-- Plugins -->
+  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
+  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
+  
+
+  <style>
+    body { 
+        margin: 0; 
+        background: #FFF; 
+        display: flex;
+        justify-content: center;   /* horizontal center */
+        align-items: center;        /* vertical center */
+        height: 100vh;              /* full window height */
+    }
+
+    #player {
+        width: 80%;
+        height: 80vh;
+        background: #000;
+    }
+  </style>
+</head>
+<body>
+
+<div id="player"></div>
+
+<script>
+window.addEventListener("load", () => {
+
+  // Your Flowplayer player token
+  const playerToken = "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
+
+  const player = flowplayer("#player", {
+    token: playerToken,        // <-- IMPORTANT
+
+    autoplay: false,
+    controls: true,
+
+    src: {
+      type: "application/dash+xml",
+      src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd"
+    },
+
+    drm: {
+      "com.widevine.alpha": {
+        url: "https://widevine-dash.ezdrm.com/proxy?pX=E305BB"
+      },
+      "com.microsoft.playready": {
+        url: "https://playready.ezdrm.com/cency/preauth.aspx?pX=647252"
+      }
+    }
+  });
+
+});
+</script>
+
+</body>
+</html>
