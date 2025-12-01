@@ -13,24 +13,26 @@
   <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      background: #FFF;
-    }
+  body {
+    margin: 0;
+    background: #FFF;
+  }
 
-    #player-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+  /* Wrap just to center horizontally, not vertically */
+  #player-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px; /* padding instead of vh */
+  }
 
-    #player {
-      width: 80%;
-      max-width: 900px;
-      background: #000;
-    }
-  </style>
+  #player {
+    width: 80%;
+    max-width: 900px;
+    background: #000;
+  }
+</style>
+
 </head>
 
 <body>
