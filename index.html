@@ -1,45 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Flowplayer + EZDRM + DASH (Wowza Video)</title>
-
-  <!-- Flowplayer Native Core -->
-  <script src="https://cdn.flowplayer.com/releases/native/stable/flowplayer.min.js"></script>
-
-  <!-- Load DRM plugin BEFORE DASH plugin -->
-  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/drm.min.js"></script>
-  <script src="https://cdn.flowplayer.com/releases/native/stable/plugins/dash.min.js"></script>
-
-  <style>
-    body { 
-        margin: 0; 
-        background: #FFF; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-
-    #player {
-        width: 80%;
-        height: 80vh;
-        background: #000;
-    }
-  </style>
-</head>
-<body>
-
-<div id="player"></div>
-
 <script>
 window.addEventListener("load", () => {
 
   const playerToken =
-    "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
+    "YOUR_TOKEN";
 
+  // ⭐ Correct absolute path to the MPD's segment directory
   const ABSOLUTE_BASE =
-    "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/";
+    "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/v5bxfd6l/";
 
   const player = flowplayer("#player", {
     token: playerToken,
@@ -48,7 +15,8 @@ window.addEventListener("load", () => {
 
     sources: [{
       type: "application/dash+xml",
-      src: ABSOLUTE_BASE + "manifest.mpd"
+      // ⭐ manifest stays in /live/
+      src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd"
     }],
 
     drm: {
@@ -63,13 +31,13 @@ window.addEventListener("load", () => {
     dash: {
       rewriteUrl: (url, context) => {
 
-        // If absolute, return as is
+        // If absolute URL, leave unchanged
         if (url.startsWith("http")) return url;
 
-        // Strip any relative prefixes
+        // Strip any leading ../ or ./ 
         const clean = url.replace(/^(\.?\.\/)+/, "");
 
-        // Force absolute CDN3 path
+        // ⭐ Force all segments to the correct BaseURL directory
         return ABSOLUTE_BASE + clean;
       }
     }
@@ -77,6 +45,3 @@ window.addEventListener("load", () => {
 
 });
 </script>
-</body>
-</html>
-
