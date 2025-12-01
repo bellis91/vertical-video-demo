@@ -37,11 +37,7 @@
 window.addEventListener("load", () => {
 
   const playerToken =
-    "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
-
-  // ⭐ Correct absolute path to the MPD's segment directory
-  const ABSOLUTE_BASE =
-    "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/v5bxfd6l/";
+    "YOUR_TOKEN";
 
   const player = flowplayer("#player", {
     token: playerToken,
@@ -50,7 +46,6 @@ window.addEventListener("load", () => {
 
     sources: [{
       type: "application/dash+xml",
-      // ⭐ manifest stays in /live/
       src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd"
     }],
 
@@ -66,16 +61,20 @@ window.addEventListener("load", () => {
     dash: {
       rewriteUrl: (url, context) => {
 
-        // If absolute URL, leave unchanged
         if (url.startsWith("http")) return url;
 
-        // Strip any leading ../ or ./ 
-        const clean = url.replace(/^(\.?\.\/)+/, "");
+        // Clean relative prefixes
+        let clean = url.replace(/^(\.?\.\/)+/, "").replace(/^\/+/, "");
 
-        // ⭐ Force all segments to the correct BaseURL directory
-        return ABSOLUTE_BASE + clean;
+        // If DASH.js already outputs v5bxfd6l/...
+        if (clean.startsWith("v5bxfd6l/")) {
+          return "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/" + clean;
+        }
+
+        return "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/v5bxfd6l/" + clean;
       }
     }
+
   });
 
 });
