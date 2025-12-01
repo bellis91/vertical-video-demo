@@ -34,39 +34,42 @@
 <div id="player"></div>
 
 <script>
-window.addEventListener("load", () => {
+window.addEventListener("DOMContentLoaded", () => {
 
   const playerToken =
     "eyJraWQiOiJrdTlYQ2lsa3RzV0MiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjIjoie1wiYWNsXCI6MzgsXCJpZFwiOlwia3U5WENpbGt0c1dDXCJ9IiwiaXNzIjoiRmxvd3BsYXllciJ9.WH9HHH3_fiUw45ti_Wd0mEVcbviCsZV6m6nbzAbivJsiq0dDG4FFFmmz7TP8x-zas8qNlwYNeomBcP-kEjGjzw";
 
-  const player = flowplayer("#player", {
+  const ABSOLUTE_BASE =
+    "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/v5bxfd6l/";
+
+  flowplayer("#player", {
     token: playerToken,
     autoplay: false,
     controls: true,
 
-    sources: [{
+    src: [{
+      src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd",
       type: "application/dash+xml",
-      src: "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/live/manifest.mpd"
-    }],
 
-    drm: {
-      "com.widevine.alpha": {
-        url: "https://widevine-dash.ezdrm.com/proxy?pX=E305BB"
-      },
-      "com.microsoft.playready": {
-        url: "https://playready.ezdrm.com/cency/preauth.aspx?pX=647252"
+      drm: {
+        [flowplayer.drm.WIDEVINE]: {
+          [flowplayer.drm.LICENSE_SERVER]: "https://widevine-dash.ezdrm.com/proxy?pX=E305BB",
+          [flowplayer.drm.VENDOR]: "ezdrm"
+        },
+        [flowplayer.drm.PLAYREADY]: {
+          [flowplayer.drm.LICENSE_SERVER]: "https://playready.ezdrm.com/cency/preauth.aspx?pX=647252",
+          [flowplayer.drm.VENDOR]: "ezdrm"
+        }
       }
-    },
+    }],
 
     dash: {
       rewriteUrl: (url, context) => {
 
         if (url.startsWith("http")) return url;
 
-        // Clean relative prefixes
         let clean = url.replace(/^(\.?\.\/)+/, "").replace(/^\/+/, "");
 
-        // If DASH.js already outputs v5bxfd6l/...
         if (clean.startsWith("v5bxfd6l/")) {
           return "https://cdn3.wowza.com/1/SlNhUkdlY2VyVFBv/SG04MWtX/dash/" + clean;
         }
@@ -76,7 +79,6 @@ window.addEventListener("load", () => {
     }
 
   });
-
 });
 </script>
 </body> 
